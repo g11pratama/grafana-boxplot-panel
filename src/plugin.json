@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "name": "grafana-boxplot-panel",
+  "id": "g-11-pratama-grafana-boxplot-panel",
+  "info": {
+    "description": "D3-based Boxplot panel for Grafana",
+    "author": {
+      "name": "g11pratama",
+      "url": "https://github.com/g11pratama"
+    },
+    "keywords": [
+      "boxplot",
+      "panel"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/grafana-starter-panel"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/grafana-starter-panel/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=7.0.0",
+    "plugins": []
+  }
+}
