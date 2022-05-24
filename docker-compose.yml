@@ -1,0 +1,24 @@
+version: '3.0'
+
+services:
+  grafana1:
+    container_name: grafana-boxplot-7.0.0
+    build: 
+      context: .
+      args:
+        grafana_version: 7.0.0
+    ports:
+      - 3000:3000/tcp
+    volumes:
+      - ~/grafana-plugins:/var/lib/grafana/plugins
+
+  grafana2:
+    container_name: grafana-boxplot-8.3.4
+    build: 
+      context: .
+      args:
+        grafana_version: 8.3.4
+    ports:
+      - 3001:3000/tcp
+    volumes:
+      - ~/grafana-plugins:/var/lib/grafana/plugins
