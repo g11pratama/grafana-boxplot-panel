@@ -3,12 +3,24 @@ import { PanelProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import { css, cx } from 'emotion';
 import { stylesFactory, useTheme } from '@grafana/ui';
+import * as d3 from 'd3';
 
 interface Props extends PanelProps<SimpleOptions> {}
 
 export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) => {
   const theme = useTheme();
   const styles = getStyles();
+  const values = [4, 8, 15, 16, 23, 42];
+  const padding = 20;
+  const chartHeight = height - padding;
+  const barHeight = chartHeight / values.length;
+
+  const scale = d3
+    .scaleLinear()
+    .domain([0, d3.max(values) || 0.0])
+    .range([0, width]);
+  const axis = d3.axisBottom(scale);
+
   return (
     <div
       className={cx(
@@ -25,11 +37,25 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) =
         height={height}
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
-        viewBox={`-${width / 2} -${height / 2} ${width} ${height}`}
       >
         <g>
-          <circle style={{ fill: `${theme.isLight ? theme.palette.greenBase : theme.palette.blue95}` }} r={100} />
+          {values.map((value, i) => (
+            <rect
+              key={i}
+              x={0}
+              y={i * barHeight}
+              width={scale(value)}
+              height={barHeight - 1}
+              style={{ fill: `${theme.isLight ? theme.palette.greenBase : theme.palette.blue95}` }}
+            />
+          ))}
         </g>
+        <g
+          transform={`translate(0, ${chartHeight})`}
+          ref={(node) => {
+            d3.select(node).call(axis as any);
+          }}
+        />
       </svg>
 
       <div className={styles.textBox}>
