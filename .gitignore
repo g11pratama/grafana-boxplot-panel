@@ -29,5 +29,6 @@ e2e-results/
 # Editors
 .idea
 
-# Python virtual environments
+# Python virtual environments, pycache
 venv
+__pycache__
