@@ -4,4 +4,5 @@ export interface SimpleOptions {
   text: string;
   showSeriesCount: boolean;
   seriesCountSize: SeriesSize;
+  d3ThresholdNum: number;
 }

@@ -7,25 +7,26 @@ import * as d3 from 'd3';
 
 interface Props extends PanelProps<SimpleOptions> {}
 
-export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) => {
+export const BoxPlotPanel: React.FC<Props> = ({ options, data, width, height }) => {
   const theme = useTheme();
   const styles = getStyles();
   //const values = [4, 8, 15, 16, 23, 42];
   const padding = 60;
   const chartHeight = height - padding;
   //const barHeight = chartHeight / values.length;
-  const thresholdDiv = 40;
-  // const xAxisRef = useRef(null);
-  // const yAxisRef = useRef(null);
+  const threshold = options.d3ThresholdNum;
+  const xAxisRef = useRef(null);
+  const yAxisRef = useRef(null);
   const dataRef = useRef(null);
 
   const [Y, B] = useMemo(() => {
-    const X = data.series[0].fields.find((f) => f.type === FieldType.time)!.values.toArray();
+    let X = data.series[0].fields.find((f) => f.type === FieldType.time)!.values.toArray();
+    X.forEach(d => new Date(d));
     const Y = data.series[0].fields.find((f) => f.type === FieldType.number)!.values.toArray();
     const I = d3.range(X.length).filter((i) => !isNaN(X[i]) && !isNaN(Y[i]));
     const B = d3
       .histogram()
-      .thresholds(width / thresholdDiv)
+      .thresholds(threshold)
       .value((i) => X[i])(I)
       .map((bin) => {
         const y = (i: number) => Y[i];
@@ -46,27 +47,26 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) =
         return binCopy;
       });
     return [Y, B];
-  }, [data, width]);
+  }, [data, threshold]);
 
   const xDomain = [d3.min(B, (d) => d.x0) || 0, d3.max(B, (d) => d.x1) || 0.0];
   const yDomain = [d3.min(B, (d) => d.range[0]) || 0, d3.max(B, (d) => d.range[1]) || 0.0];
-  const xScale = d3.scaleLinear(xDomain, [0, width]).interpolate(d3.interpolateRound);
-  const yScale = d3.scaleLinear(yDomain, [0, chartHeight]);
+  const xScale = d3.scaleTime(xDomain, [0, width]).interpolate(d3.interpolateRound);
+  const yScale = d3.scaleLinear(yDomain, [chartHeight, 0]);
 
-  const xAxis = d3
-    .axisBottom(xScale)
-    .ticks(width / thresholdDiv)
-    .tickSizeOuter(0);
+  const xAxis = d3.axisBottom(xScale).ticks(threshold).tickSizeOuter(0);
   const yAxis = d3.axisLeft(yScale).ticks(height / 40);
 
   useEffect(() => {
-    // d3.select(yAxisRef.current)
-    //   .call(yAxis as any);
-    // d3.select(xAxisRef.current)
-    //   .call(xAxis as any);
+    d3.select(yAxisRef.current).call(yAxis as any);
+    d3.select(xAxisRef.current).call((xAxis as any).tickFormat(d3.timeFormat("%Y-%m-%d")));
 
-    const g = d3.select(dataRef.current).selectAll('g').data(B).join('g');
-    g.append('path')
+    d3.select(dataRef.current).selectAll('g').remove();
+    const g = d3.select(dataRef.current)
+      .selectAll('g')
+      .data(B)
+      .join('g');
+      g.append('path')
       .attr('stroke', 'currentColor')
       .attr(
         'd',
@@ -76,41 +76,41 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) =
       `
       );
 
-    g.append('path')
-      .attr('fill', '#ddd')
-      .attr(
-        'd',
-        (d) => `
-        M${xScale(d.x0!) + 0.5},${yScale(d.quartiles[2]!)}
-        H${xScale(d.x1!) - 0.5}
-        V${yScale(d.quartiles[0]!)}
-        H${xScale(d.x0!) + 0.5}
-        Z
-      `
-      );
+      g.append('path')
+        .attr('fill', '#ddd')
+        .attr(
+          'd',
+          (d) => `
+          M${xScale(d.x0!) + 0.5},${yScale(d.quartiles[2]!)}
+          H${xScale(d.x1!) - 0.5}
+          V${yScale(d.quartiles[0]!)}
+          H${xScale(d.x0!) + 0.5}
+          Z
+        `
+        );
 
-    g.append('path')
-      .attr('stroke', 'currentColor')
-      .attr('stroke-width', 2)
-      .attr(
-        'd',
-        (d) => `
-        M${xScale(d.x0!) + 0.5},${yScale(d.quartiles[1]!)}
-        H${xScale(d.x1!) - 0.5}
-      `
-      );
+      g.append('path')
+        .attr('stroke', 'currentColor')
+        .attr('stroke-width', 2)
+        .attr(
+          'd',
+          (d) => `
+          M${xScale(d.x0!) + 0.5},${yScale(d.quartiles[1]!)}
+          H${xScale(d.x1!) - 0.5}
+        `
+        );
 
-    g.append('g')
-      .attr('fill', 'currentColor')
-      .attr('fill-opacity', 0.2)
-      .attr('stroke', 'none')
-      .attr('transform', (d) => `translate(${xScale((d.x0! + d.x1!) / 2)},0)`)
-      .selectAll('circle')
-      .data((d) => d.outliers)
-      .join('circle')
-      .attr('r', 2)
-      .attr('cx', () => (Math.random() - 0.5) * 4)
-      .attr('cy', (i) => yScale(Y[i]));
+      g.append('g')
+        .attr('fill', 'currentColor')
+        .attr('fill-opacity', 0.2)
+        .attr('stroke', 'none')
+        .attr('transform', (d) => `translate(${xScale((d.x0! + d.x1!) / 2)},0)`)
+        .selectAll('circle')
+        .data((d) => d.outliers)
+        .join('circle')
+        .attr('r', 2)
+        .attr('cx', () => (Math.random() - 0.5) * 4)
+        .attr('cy', (i) => yScale(Y[i]));
   });
 
   // const scale = d3
@@ -136,8 +136,8 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) =
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
       >
-        <g transform={`translate(40, 0)`} ref={(node) => d3.select(node).call(yAxis as any)} />
-        <g transform={`translate(0, ${chartHeight})`} ref={(node) => d3.select(node).call(xAxis as any)} />
+        <g transform={`translate(40, 0)`} ref={yAxisRef} />
+        <g transform={`translate(0, ${chartHeight})`} ref={xAxisRef} />
         <g ref={dataRef} />
       </svg>
 

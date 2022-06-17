@@ -13,13 +13,17 @@
   "author": "g11pratama",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@grafana/data": "latest",
-    "@grafana/toolkit": "latest",
-    "@grafana/ui": "latest",
+    "@grafana/data": "^9.0.0",
+    "@grafana/toolkit": "^9.0.0",
+    "@grafana/ui": "^9.0.0",
     "@types/d3": "^7.1.0",
     "emotion": "10.0.27"
   },
   "engines": {
     "node": ">=14"
+  },
+  "dependencies": {
+    "d3": "^7.4.4",
+    "d3-array": "3.1.6"
   }
 }
