@@ -136,9 +136,9 @@ export const BoxPlotPanel: React.FC<Props> = ({ options, data, width, height }) 
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
       >
+        <g ref={dataRef} />
         <g transform={`translate(40, 0)`} ref={yAxisRef} />
         <g transform={`translate(0, ${chartHeight})`} ref={xAxisRef} />
-        <g ref={dataRef} />
       </svg>
 
       <div className={styles.textBox}>
