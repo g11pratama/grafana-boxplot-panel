@@ -104,4 +104,6 @@ if (typeof FieldColorModeId !== "undefined") {
         FieldConfigProperty.NoValue,
       ],
     });
+} else {
+  plugin.useFieldConfig();
 }

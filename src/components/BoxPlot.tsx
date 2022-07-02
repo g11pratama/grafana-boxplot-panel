@@ -1,28 +1,50 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { DataFrame, FieldType} from '@grafana/data';
+import { 
+  DataFrame, 
+  FieldType, 
+  getFieldSeriesColor,
+  GrafanaTheme2,
+} from '@grafana/data';
+import { colors } from "@grafana/ui";
 import { getBinBox } from './utils';
 import * as d3 from 'd3';
 
 interface BoxPlotProps {
   frame: DataFrame,
+  theme: GrafanaTheme2 | null,
   xScale: d3.ScaleTime<number, number, never>,
   yScale: d3.ScaleLinear<number, number, never>,
-  histGenerator: d3.HistogramGeneratorNumber<number, number>;
+  histGenerator: d3.HistogramGeneratorNumber<number, number>
+  index: number,
 };
 
-export const BoxPlot: React.FC<BoxPlotProps> = ({ frame, xScale, yScale, histGenerator }) => {
+export const BoxPlot: React.FC<BoxPlotProps> = ({ 
+  frame, 
+  theme,
+  xScale, 
+  yScale,
+  histGenerator,
+  index,
+}) => {
   const dataRef = useRef(null);
 
-  const [Y, B] = useMemo(() => {
+  const [Y, B, seriesColor] = useMemo(() => {
     let X = frame.fields.find((f) => f.type === FieldType.time)!.values.toArray();
     X.forEach(d => new Date(d));
-    const Y = frame.fields.find((f) => f.type === FieldType.number)!.values.toArray();
+
+    const yField = frame.fields.find((f) => f.type === FieldType.number)!;
+    const Y = yField.values.toArray();
     const I = d3.range(X.length).filter((i) => !isNaN(X[i]) && !isNaN(Y[i]));
     const B = histGenerator
       .value((i) => X[i])(I)
       .map((bin) => getBinBox(bin, Y));
-    return [Y, B];
-  }, [frame, histGenerator]);
+
+    // const scaleCalc = getScaleCalculator( yField, theme as GrafanaTheme2 );
+
+    const seriesColor = theme? getFieldSeriesColor(yField, theme).color: colors[index];
+
+    return [Y, B, seriesColor];
+  }, [frame, histGenerator, theme, index]);
 
   useEffect(() => {
     d3.select(dataRef.current).selectAll('g').remove();
@@ -41,7 +63,7 @@ export const BoxPlot: React.FC<BoxPlotProps> = ({ frame, xScale, yScale, histGen
       );
 
       g.append('path')
-        .attr('fill', '#ddd')
+        .attr('fill', seriesColor)
         .attr(
           'd',
           (d) => `
@@ -65,7 +87,7 @@ export const BoxPlot: React.FC<BoxPlotProps> = ({ frame, xScale, yScale, histGen
         );
 
       g.append('g')
-        .attr('fill', 'currentColor')
+        .attr('fill', seriesColor)
         .attr('fill-opacity', 0.2)
         .attr('stroke', 'none')
         .attr('transform', (d) => `translate(${xScale((d.x0! + d.x1!) / 2)},0)`)

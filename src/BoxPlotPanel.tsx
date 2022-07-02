@@ -2,11 +2,14 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { FieldType, PanelProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import { css, cx } from 'emotion';
-import { stylesFactory, useTheme } from '@grafana/ui';
+import { stylesFactory, useTheme2 } from '@grafana/ui';
 import { BoxPlot } from 'components/BoxPlot';
 import * as d3 from 'd3';
 
 interface Props extends PanelProps<SimpleOptions> {}
+
+// For v7.0 backward compatibility
+const useTheme = useTheme2 || (() => null) ;
 
 export const BoxPlotPanel: React.FC<Props> = ({ options, data, width, height }) => {
   const theme = useTheme();
@@ -23,9 +26,11 @@ export const BoxPlotPanel: React.FC<Props> = ({ options, data, width, height }) 
     const findExtrema = (fieldType: FieldType) => {
       return data.series.reduce(([curMin, curMax], frame) => {
         const timeArr = frame.fields.find((f) => f.type === fieldType)!.values.toArray();
+
         const [localMin, localMax] = timeArr.reduce(([curLocalMin, curLocalMax], curVal) => {
           return [Math.min(curLocalMin, curVal), Math.max(curLocalMax, curVal)];
         }, [curMin, curMax]);
+        
         return [Math.min(curMin, localMin), Math.max(curMax, localMax)];
       }, [Infinity, -Infinity]);
     }
@@ -62,16 +67,18 @@ export const BoxPlotPanel: React.FC<Props> = ({ options, data, width, height }) 
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
       >
-        {data.series.map((frame) => {
+        {data.series.map((frame, idx) => {
           const field = frame.fields.find((f) => f.type === FieldType.number);
           const key = frame.refId + field!.name;
           return ( 
             <BoxPlot
               key={key}
               frame={frame}
+              theme={theme}
               xScale={xScale}
               yScale={yScale}
               histGenerator={histGenerator}
+              index={idx}
             />
           );
         })}
@@ -83,7 +90,7 @@ export const BoxPlotPanel: React.FC<Props> = ({ options, data, width, height }) 
         {options.showSeriesCount && (
           <div
             className={css`
-              font-size: ${theme.typography.size[options.seriesCountSize]};
+              font-size: ${12};
             `}
           >
             Number of series: {data.series.length}
